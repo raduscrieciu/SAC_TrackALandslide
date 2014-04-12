@@ -8,10 +8,8 @@ import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 import android.content.Context;
 import android.net.ConnectivityManager;
@@ -48,11 +46,11 @@ public class MainActivity extends ActionBarActivity implements OnClickListener{
 	private EditText longText, latText;
 	private SeekBar seekBar;
 	private TextView distanceText;
+	public TextView progressText, resultText;
 	private LinearLayout loadingDataLayout;
 
 	private int seekBarValue; 
-	//server address
-	final String searchUrl="http://screechstudios.com/tap.html";
+	private GameDbOpenHelper helper;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +65,8 @@ public class MainActivity extends ActionBarActivity implements OnClickListener{
 		Button doStuff=(Button) findViewById(R.id.doSomethingButton);
 		doStuff.setOnClickListener(this);
 		distanceText=(TextView) findViewById(R.id.distanceTextView);
+		progressText=(TextView) findViewById(R.id.progressText);
+		resultText=(TextView) findViewById(R.id.resultText);
 
 		loadingDataLayout=(LinearLayout) findViewById(R.id.loadingDataLayout);
 
@@ -76,7 +76,7 @@ public class MainActivity extends ActionBarActivity implements OnClickListener{
 			public void onProgressChanged(SeekBar seekBar, int progress, 
 					boolean fromUser) { 
 				// TODO Auto-generated method stub 
-				distanceText.setText("Range: "+String.valueOf(progress)+" km"); 
+				distanceText.setText("Range: "+String.valueOf((double)(progress/10))+" km"); 
 			} 
 
 			@Override 
@@ -95,6 +95,15 @@ public class MainActivity extends ActionBarActivity implements OnClickListener{
 			getSupportFragmentManager().beginTransaction()
 			.add(R.id.container, new PlaceholderFragment()).commit();
 		}
+		
+		helper = new GameDbOpenHelper(this); 
+		List<Rain> rainList=new ArrayList<Rain>();
+		rainList=helper.getAchievements(); 
+	
+		for(int i=0; i<rainList.size(); i++){
+			System.out.println(rainList.get(i).getLatitude()+" "+rainList.get(i).getLongitude()+" "+rainList.get(i).getRainIndex());
+		}
+		
 	}
 
 	@Override
@@ -157,10 +166,11 @@ public class MainActivity extends ActionBarActivity implements OnClickListener{
 			break;
 
 		case R.id.doSomethingButton:
+			if(longText.getText().toString().equals("") || latText.getText().toString().equals("")){
+				toast("Please provide a valid set of coordinates.");
+			}else{
+			
 			seekBarValue=seekBar.getProgress();
-
-			toast(seekBar.getProgress()+"");
-			//	query2();
 
 			new Thread() {
 				@Override
@@ -170,9 +180,14 @@ public class MainActivity extends ActionBarActivity implements OnClickListener{
 						runOnUiThread(new Runnable() {@Override public void run()
 						{
 							displayLoadingScreen(true);
+							progressText.setText("Parsing elevation data...");
 						}});
 
-						System.out.println("%%%%%%%%%%%"+elv.getStandardDeviation(longitude, latitude, seekBarValue)+"");
+						System.out.println("xxxxxxxxxxxx"+Double.parseDouble(longText.getText().toString())+"  "+ 
+								Double.parseDouble(latText.getText().toString()));
+						
+						elv.getStandardDeviation(Double.parseDouble(longText.getText().toString()), 
+								Double.parseDouble(latText.getText().toString()), seekBarValue/10);
 					}
 					else{
 						Log.i(getClass().getName(), "Network error, unable to connect.");
@@ -180,7 +195,7 @@ public class MainActivity extends ActionBarActivity implements OnClickListener{
 				}
 			}.start();
 
-
+			}
 
 			break;
 		}
@@ -194,45 +209,6 @@ public class MainActivity extends ActionBarActivity implements OnClickListener{
 		}
 	}
 
-	public void query2()
-	{
-		new Thread() {
-			@Override
-			public void run() {
-
-
-
-				Log.i("Android"," MySQL Connect Example.");
-				Connection conn = null;
-				try {
-					String driver = "net.sourceforge.jtds.jdbc.Driver";
-					Class.forName(driver).newInstance();
-					//test = com.microsoft.sqlserver.jdbc.SQLServerDriver.class;
-					String connString = "jdbc:jtds:sqlserver://127.0.0.1:1433/DBNAME;encrypt=fasle;user=root;password=gherilaptm;instance=SQLEXPRESS;";
-					String username = "root";
-					String password = "gherilaptm";
-					conn = DriverManager.getConnection(connString,username,password);
-					Log.w("Connection","open");
-					Statement stmt = conn.createStatement();
-					ResultSet reset = stmt.executeQuery("select * from piwik");
-
-					//Print the data to the console
-					while(reset.next()){
-						Log.w("Data:",reset.getString(3));
-						//	              Log.w("Data",reset.getString(2));
-					}
-					conn.close();
-
-				} catch (Exception e)
-				{
-					Log.w("Error connection","" + e.getMessage());
-					e.printStackTrace();
-				}
-			}
-		}.start();
-	}
-
-
 	private void getPosition(){
 		gps = new GPSTracker(MainActivity.this);
 		// check if GPS enabled		
@@ -241,8 +217,8 @@ public class MainActivity extends ActionBarActivity implements OnClickListener{
 			longitude = gps.getLongitude();
 		}
 		else{
-			//			latitude=0;
-			//			longitude=0;
+			latitude=0;
+			longitude=0;
 		}
 		if((latitude==0)||(longitude==0)){
 			try{

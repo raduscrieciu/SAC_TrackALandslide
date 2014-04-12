@@ -46,6 +46,8 @@ public class Eleveation {
 	//	double height=getElevation(longitude, latitude);
 		double result=0;
 		
+		System.out.println("aaaaaaaaaaaaaaaa"+longitude+"  "+latitude);
+		
 		double typicalDistance=range/3;
 		double theta=0;
 		double phi=0;
@@ -109,10 +111,11 @@ public class Eleveation {
 		}
 
 		result=Math.sqrt(((totalHeightSq)/5)-(totalHeight/5)*(totalHeight/5));
-		
+		final double  res=result;
 		context.runOnUiThread(new Runnable() {@Override public void run()
 		{
 			context.displayLoadingScreen(false);
+			context.resultText.setText("Standard Deviation: "+res);
 		}});
 		return result;
 	}
