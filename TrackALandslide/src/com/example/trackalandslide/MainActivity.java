@@ -50,15 +50,20 @@ public class MainActivity extends ActionBarActivity implements OnClickListener{
 	private LinearLayout loadingDataLayout;
 
 	private int seekBarValue; 
-	private GameDbOpenHelper helper;
-
+	private DbOpenHelper helper;
+	
+	private final static double initLat=33.6907;
+	private final static double initLong=-84.1503;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
 		longText=(EditText) findViewById(R.id.longitudeText);
+		longText.setText(initLong+"");
 		latText=(EditText) findViewById(R.id.latitudeText);		
+		latText.setText(initLat+"");
 		ImageButton myLocation=(ImageButton) findViewById(R.id.myLocationButton);
 		myLocation.setOnClickListener(this);
 		seekBar=(SeekBar) findViewById(R.id.seekBar1);
@@ -69,7 +74,8 @@ public class MainActivity extends ActionBarActivity implements OnClickListener{
 		resultText=(TextView) findViewById(R.id.resultText);
 
 		loadingDataLayout=(LinearLayout) findViewById(R.id.loadingDataLayout);
-
+		
+		distanceText.setText("Range: "+String.valueOf((double)(seekBar.getProgress()/10))+" km"); 
 		seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){ 
 
 			@Override 
@@ -96,13 +102,8 @@ public class MainActivity extends ActionBarActivity implements OnClickListener{
 			.add(R.id.container, new PlaceholderFragment()).commit();
 		}
 		
-		helper = new GameDbOpenHelper(this); 
-		List<Rain> rainList=new ArrayList<Rain>();
-		rainList=helper.getAchievements(); 
+		helper = new DbOpenHelper(this); 
 	
-		for(int i=0; i<rainList.size(); i++){
-			System.out.println(rainList.get(i).getLatitude()+" "+rainList.get(i).getLongitude()+" "+rainList.get(i).getRainIndex());
-		}
 		
 	}
 
@@ -195,6 +196,15 @@ public class MainActivity extends ActionBarActivity implements OnClickListener{
 				}
 			}.start();
 
+			List<Rain> rainList=new ArrayList<Rain>();
+			rainList=helper.getAchievements(initLong,initLat); 
+		
+			System.out.println(rainList.size());
+			
+			for(int i=0; i<rainList.size(); i++){
+				System.out.println(rainList.get(i).getLatitude()+" "+rainList.get(i).getLongitude()+" "+rainList.get(i).getRainIndex());
+				resultText.append("Rainfall Index: "+rainList.get(0).getRainIndex());
+			}
 			}
 
 			break;
@@ -345,7 +355,7 @@ public class MainActivity extends ActionBarActivity implements OnClickListener{
 	}
 
 
-	private void toast(String message){
+	public void toast(String message){
 		Toast toast = Toast.makeText(this, message, Toast.LENGTH_LONG );
 		toast.show();
 	}

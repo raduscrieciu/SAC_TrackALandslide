@@ -14,14 +14,14 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
-public class GameDbOpenHelper extends SQLiteOpenHelper{
+public class DbOpenHelper extends SQLiteOpenHelper{
 	protected static final int version = 1; 
 	protected static final String databaseName = "rain_data.db"; 
 
 	protected String CREATE_SQL = 
 			"create table rain_data (" + 
 					"_id INTEGER PRIMARY KEY, " + 
-					"latitude TEXT, longidute TEXT, rainIndex TEXT)"; 
+					"latitude TEXT, longitude TEXT, rainIndex TEXT)"; 
 
 	private MainActivity context;
 	
@@ -30,7 +30,7 @@ public class GameDbOpenHelper extends SQLiteOpenHelper{
 	private String line;
 	private String data[];
 
-	public GameDbOpenHelper(Context context) {
+	public DbOpenHelper(Context context) {
 		super(context, databaseName, null, version);
 		this.context=(MainActivity)context;
 	}
@@ -44,7 +44,7 @@ public class GameDbOpenHelper extends SQLiteOpenHelper{
 
 
 		try {
-			in = context.getAssets().open("raindata.txt");
+			in = context.getAssets().open("raindata_small.txt");
 			reader = new BufferedReader(new InputStreamReader(in));
 			//	line = reader.readLine();
 			
@@ -101,7 +101,7 @@ public class GameDbOpenHelper extends SQLiteOpenHelper{
 		// Set values for columns 
 		ContentValues values = new ContentValues(); 
 		values.put("latitude", rain.getLatitude()+""); 
-		values.put("longidute", rain.getLongitude()+"");
+		values.put("longitude", rain.getLongitude()+"");
 		values.put("rainIndex", rain.getRainIndex()+"");
 
 		// Specify the table name and the values 
@@ -134,13 +134,13 @@ public class GameDbOpenHelper extends SQLiteOpenHelper{
 	 * 
 	 * @return a list of all achievements
 	 */
-	public List<Rain> getAchievements() {
+	public List<Rain> getAchievements(double longitude, double latitude) {
 		SQLiteDatabase db = this.getWritableDatabase();
 
 		List<Rain> result=new ArrayList<Rain>();
 
 		// Get the cursor 
-		Cursor cursor = db.rawQuery("select * from rain_data", new String[]{}); 
+		Cursor cursor = db.rawQuery("select * from rain_data WHERE latitude ='"+latitude+"' AND longitude='"+longitude+"'", new String[]{}); 
 
 		// Iterate through the rows of the cursor 
 		for (int i=0;i<cursor.getCount();i++) { 
@@ -148,7 +148,7 @@ public class GameDbOpenHelper extends SQLiteOpenHelper{
 			cursor.moveToPosition(i);
 			// Print the value of the title column 
 			result.add(new Rain(Double.parseDouble(cursor.getString(cursor.getColumnIndex("latitude"))),
-					Double.parseDouble(cursor.getString(cursor.getColumnIndex("longidute"))),
+					Double.parseDouble(cursor.getString(cursor.getColumnIndex("longitude"))),
 					Double.parseDouble(cursor.getString(cursor.getColumnIndex("rainIndex")))));
 		}
 

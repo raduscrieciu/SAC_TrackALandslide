@@ -115,7 +115,7 @@ public class Eleveation {
 		context.runOnUiThread(new Runnable() {@Override public void run()
 		{
 			context.displayLoadingScreen(false);
-			context.resultText.setText("Standard Deviation: "+res);
+			context.resultText.append("\nStandard Deviation: "+res);
 		}});
 		return result;
 	}
