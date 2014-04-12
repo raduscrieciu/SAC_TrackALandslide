@@ -12,8 +12,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.example.trackalandslide.MainActivity.RetrieveUrlInfo;
-
+import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -22,19 +21,21 @@ public class Eleveation {
 	double longitude, latitude;
 	int range;
 
-	public Eleveation(){
+	private MainActivity context;
+	
+	public Eleveation(Context context){
+		this.context=(MainActivity) context;
 	}
 
 	public double getElevation(double longitude, double latitude){
 		double result=0;
 
 		RetrieveUrlInfo ret=new RetrieveUrlInfo();
-		String searchUrl="http://veloroutes.org/elevation/?location="+latitude+"%2C+-"+longitude+"&units=m";
+		String searchUrl="http://veloroutes.org/elevation/?location="+latitude+"%2C+"+longitude+"&units=m";
 
 		try {
 			result=Double.parseDouble(ret.execute(searchUrl).get()[0]);
 		} catch (ExecutionException | InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -42,10 +43,10 @@ public class Eleveation {
 	}
 
 	public double getStandardDeviation(double longitude, double latitude, int range){
-		double height=getElevation(longitude, latitude);
+	//	double height=getElevation(longitude, latitude);
 		double result=0;
 		
-		double typicalDistance=1.00;
+		double typicalDistance=range/3;
 		double theta=0;
 		double phi=0;
 		
@@ -56,6 +57,8 @@ public class Eleveation {
 		
 		double x, y, z, x1, y1, x2, y2, z2, x3, y3, z3;
 		double r;
+		
+		double currentHeight=0, totalHeight=0, totalHeightSq=0;
 		
 		for(int i=0; i<5; i++){
 			result=-typicalDistance*Math.log(1-Math.random());
@@ -72,7 +75,6 @@ public class Eleveation {
 			
 			x1=y;
 			y1=x;
-		//	z1=0;
 			
 			x2=z*x;
 			y2=z*y;
@@ -87,13 +89,31 @@ public class Eleveation {
 			phiNew=Math.atan(y3/x3);
 			
 			newLatitude=90-(180*thetaNew/Math.PI);
+			
+			
 			newLongitude=(180*phiNew/Math.PI)-180;
 			
+			if(newLongitude <=-180){
+				newLongitude+=180;
+			}
+			
+			
+			
 			System.out.println("==================\n"+newLatitude+"   ;   "+newLongitude);
+			
+			
+			System.out.println(getElevation(newLongitude, newLatitude)+"  **********");
+			currentHeight=getElevation(newLongitude, newLatitude);
+			totalHeight+=currentHeight;
+			totalHeightSq+=currentHeight*currentHeight;
 		}
 
+		result=Math.sqrt(((totalHeightSq)/5)-(totalHeight/5)*(totalHeight/5));
 		
-		
+		context.runOnUiThread(new Runnable() {@Override public void run()
+		{
+			context.displayLoadingScreen(false);
+		}});
 		return result;
 	}
 	class RetrieveUrlInfo extends AsyncTask<String, Void, String[]> {

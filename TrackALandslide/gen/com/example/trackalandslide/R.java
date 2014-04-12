@@ -1093,7 +1093,7 @@ containing a value of this type.
         public static final int action_menu_divider=0x7f050016;
         public static final int action_menu_presenter=0x7f050017;
         public static final int action_mode_close_button=0x7f050024;
-        public static final int action_settings=0x7f050049;
+        public static final int action_settings=0x7f05004c;
         public static final int activity_chooser_view_content=0x7f050025;
         public static final int always=0x7f05000b;
         public static final int beginning=0x7f050011;
@@ -1119,12 +1119,14 @@ containing a value of this type.
         public static final int linearLayout1=0x7f05003d;
         public static final int listMode=0x7f050001;
         public static final int list_item=0x7f050029;
+        public static final int loadingDataLayout=0x7f050049;
         public static final int longitudeText=0x7f050041;
         public static final int middle=0x7f050012;
         public static final int myLocationButton=0x7f050042;
         public static final int never=0x7f050009;
         public static final int none=0x7f050010;
         public static final int normal=0x7f050000;
+        public static final int progressBar1=0x7f05004a;
         public static final int progress_circular=0x7f050018;
         public static final int progress_horizontal=0x7f050019;
         public static final int radio=0x7f05002f;
@@ -1150,6 +1152,7 @@ containing a value of this type.
         public static final int textView2=0x7f05003e;
         public static final int textView3=0x7f050044;
         public static final int textView4=0x7f050045;
+        public static final int textView5=0x7f05004b;
         public static final int title=0x7f05002b;
         public static final int top_action_bar=0x7f050020;
         public static final int up=0x7f050021;

@@ -8,7 +8,10 @@ import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
-import java.util.concurrent.ExecutionException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
 
 import android.content.Context;
 import android.net.ConnectivityManager;
@@ -29,6 +32,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -44,6 +48,7 @@ public class MainActivity extends ActionBarActivity implements OnClickListener{
 	private EditText longText, latText;
 	private SeekBar seekBar;
 	private TextView distanceText;
+	private LinearLayout loadingDataLayout;
 
 	private int seekBarValue; 
 	//server address
@@ -62,6 +67,8 @@ public class MainActivity extends ActionBarActivity implements OnClickListener{
 		Button doStuff=(Button) findViewById(R.id.doSomethingButton);
 		doStuff.setOnClickListener(this);
 		distanceText=(TextView) findViewById(R.id.distanceTextView);
+
+		loadingDataLayout=(LinearLayout) findViewById(R.id.loadingDataLayout);
 
 		seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){ 
 
@@ -153,19 +160,78 @@ public class MainActivity extends ActionBarActivity implements OnClickListener{
 			seekBarValue=seekBar.getProgress();
 
 			toast(seekBar.getProgress()+"");
-			
-			if(isNetworkAvailable()){
-				Eleveation elv=new Eleveation();
-					System.out.println(elv.getStandardDeviation(longitude, latitude, seekBarValue)+"");
-			}
-			else{
-				Log.i(getClass().getName(), "Network error, unable to connect.");
-			}
-			
-			
+			//	query2();
+
+			new Thread() {
+				@Override
+				public void run() {
+					if(isNetworkAvailable()){
+						Eleveation elv=new Eleveation(MainActivity.this);
+						runOnUiThread(new Runnable() {@Override public void run()
+						{
+							displayLoadingScreen(true);
+						}});
+
+						System.out.println("%%%%%%%%%%%"+elv.getStandardDeviation(longitude, latitude, seekBarValue)+"");
+					}
+					else{
+						Log.i(getClass().getName(), "Network error, unable to connect.");
+					}
+				}
+			}.start();
+
+
+
 			break;
 		}
 	}
+
+	public void displayLoadingScreen(boolean visible){
+		if(visible){
+			loadingDataLayout.setVisibility(View.VISIBLE);
+		}else{
+			loadingDataLayout.setVisibility(View.GONE);
+		}
+	}
+
+	public void query2()
+	{
+		new Thread() {
+			@Override
+			public void run() {
+
+
+
+				Log.i("Android"," MySQL Connect Example.");
+				Connection conn = null;
+				try {
+					String driver = "net.sourceforge.jtds.jdbc.Driver";
+					Class.forName(driver).newInstance();
+					//test = com.microsoft.sqlserver.jdbc.SQLServerDriver.class;
+					String connString = "jdbc:jtds:sqlserver://127.0.0.1:1433/DBNAME;encrypt=fasle;user=root;password=gherilaptm;instance=SQLEXPRESS;";
+					String username = "root";
+					String password = "gherilaptm";
+					conn = DriverManager.getConnection(connString,username,password);
+					Log.w("Connection","open");
+					Statement stmt = conn.createStatement();
+					ResultSet reset = stmt.executeQuery("select * from piwik");
+
+					//Print the data to the console
+					while(reset.next()){
+						Log.w("Data:",reset.getString(3));
+						//	              Log.w("Data",reset.getString(2));
+					}
+					conn.close();
+
+				} catch (Exception e)
+				{
+					Log.w("Error connection","" + e.getMessage());
+					e.printStackTrace();
+				}
+			}
+		}.start();
+	}
+
 
 	private void getPosition(){
 		gps = new GPSTracker(MainActivity.this);
@@ -269,10 +335,10 @@ public class MainActivity extends ActionBarActivity implements OnClickListener{
 				String responseString = builder.toString();
 
 				//TODO
-				
+
 				result[0]=responseString+"\n"+latitude+"\n"+longitude+"\n"+range;
-			//	System.out.println(result[0]);
-				
+				//	System.out.println(result[0]);
+
 				connection.disconnect();
 				return result;
 
