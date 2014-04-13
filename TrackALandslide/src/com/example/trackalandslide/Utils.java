@@ -14,31 +14,59 @@ public class Utils {
 	public static boolean rainFinished;
 	public static boolean deviationFinished;
 	
+	public static double rainfallIndex=0;
+	public static double standardDeviation=0;
+	public static double earthquakeIndex=0;
+	
+	private static int rainfallRisk=0, deviationRisk=0, earthquakeRisk=0;
+	
 	private MainActivity context;
 	
 	public Utils(Context context){
 		this.context=(MainActivity) context;
 	}
 	
-	public void showResult(int resultCode){
+	public double computeResult(){
+		if(standardDeviation<5){
+			deviationRisk=RESULT_LOW;
+		}else if(standardDeviation>=5 && standardDeviation<10){
+			deviationRisk=RESULT_MEDIUM;
+		}else if(standardDeviation>=10){
+			deviationRisk=RESULT_HIGH;
+		}
+		
+		if(rainfallIndex<0.04){
+			rainfallRisk=RESULT_LOW;
+		}else if(rainfallIndex>=0.04 && rainfallIndex<0.09){
+			rainfallRisk=RESULT_MEDIUM;
+		}else if(rainfallIndex>=0.09){
+			rainfallRisk=RESULT_HIGH;
+		}
+		
+		return (rainfallRisk+deviationRisk)/2;
+	}
+	
+	public void showResult(){
+		
+		double resultCode=computeResult();
+		System.out.println(rainfallRisk+"---"+deviationRisk+"---"+resultCode);
+		
 		
 		RelativeLayout resultLayout=(RelativeLayout) context.findViewById(R.id.resultLayout);
 		TextView resultText=(TextView) context.findViewById(R.id.finalResultText);
 		
-		switch (resultCode){
-		case Utils.RESULT_LOW:
+		if(resultCode<=1){
 			resultText.setText("Low Risk");
 			resultLayout.setBackgroundResource(R.drawable.green_result);
-			break;
-		case Utils.RESULT_MEDIUM:
+		}else if(resultCode<2 && resultCode>1){
 			resultText.setText("Medium Risk");
 			resultLayout.setBackgroundResource(R.drawable.yellow_result);
-			break;
-		case Utils.RESULT_HIGH:
-			resultText.setText("High Risk");
-			resultLayout.setBackgroundResource(R.drawable.red_result);
-			break;
 		}
+		else if(resultCode>=2){
+			resultText.setText("High Risk");
+			resultLayout.setBackgroundResource(R.drawable.red_result);	
+		}
+		
 		AlphaAnimation anim = new AlphaAnimation(0, 1);
 		anim.setDuration(2500);
 		resultLayout.setAnimation(anim);

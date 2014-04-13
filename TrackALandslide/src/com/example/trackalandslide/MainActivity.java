@@ -34,7 +34,7 @@ public class MainActivity extends ActionBarActivity implements OnClickListener{
 	private EditText longText, latText;
 	private SeekBar seekBar;
 	private TextView distanceText;
-	public TextView progressText, resultRainText, resultDeviationText;
+	public TextView progressText, resultRainText, resultDeviationText, resultEarthquakeText;
 	private LinearLayout loadingDataLayout;
 
 	private int seekBarValue; 
@@ -62,6 +62,8 @@ public class MainActivity extends ActionBarActivity implements OnClickListener{
 		progressText=(TextView) findViewById(R.id.progressText);
 		resultRainText=(TextView) findViewById(R.id.rainfallResultText);
 		resultDeviationText=(TextView) findViewById(R.id.standardDeviationResultText);
+		resultEarthquakeText=(TextView) findViewById(R.id.earthquakeResultText);
+
 
 		loadingDataLayout=(LinearLayout) findViewById(R.id.loadingDataLayout);
 
@@ -93,8 +95,6 @@ public class MainActivity extends ActionBarActivity implements OnClickListener{
 		}
 
 		helper = new DbOpenHelper(this); 
-
-
 	}
 
 	@Override
@@ -194,12 +194,28 @@ public class MainActivity extends ActionBarActivity implements OnClickListener{
 				}.start();
 	
 			}
+			
+			
+			new Thread() {
+				@Override
+				public void run() {
+					if(isNetworkAvailable()){
+
+						EarthquakeData eqData=new EarthquakeData(MainActivity.this, Double.parseDouble(longText.getText().toString()),
+								Double.parseDouble(latText.getText().toString()));
+						eqData.connectToServer();
+					}
+					else{
+						Log.i(getClass().getName(), "Network error, unable to connect.");
+					}
+				}
+			}.start();
+			
 			//Rainfall
 			RainFall rainFall=new RainFall(this);
 			resultRainText.setText(rainFall.getRainfallData(Double.parseDouble(longText.getText().toString()), 
 					Double.parseDouble(latText.getText().toString())));
 
-			
 			
 			break;
 		}

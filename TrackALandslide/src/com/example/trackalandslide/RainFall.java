@@ -29,10 +29,15 @@ public class RainFall {
 			for(int i=0; i<rainList.size(); i++){
 				System.out.println(rainList.get(i).getLatitude()+" "+rainList.get(i).getLongitude()+" "+rainList.get(i).getRainIndex());
 				result=("Rainfall Index: "+rainList.get(0).getRainIndex());
+				Utils.rainfallIndex=rainList.get(0).getRainIndex();
 			}
 		}
 		
 		Utils.rainFinished=true;
+		if(Utils.rainFinished && Utils.deviationFinished){
+			final Utils u=new Utils(context);
+			u.showResult();
+		}
 		
 		return result;
 	}

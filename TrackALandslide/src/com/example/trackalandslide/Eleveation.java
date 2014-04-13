@@ -119,10 +119,10 @@ public class Eleveation {
 			System.out.println("!!!!!!!!!!thing is finished!!!!!!!1111");
 			Utils.deviationFinished=true;
 
+			Utils.standardDeviation=res;
 			if(Utils.rainFinished && Utils.deviationFinished){
 				final Utils u=new Utils(context);
-				u.showResult(Utils.RESULT_HIGH);
-
+				u.showResult();
 			}
 		}});
 		return result;

@@ -62,16 +62,16 @@ public class DbOpenHelper extends SQLiteOpenHelper{
 					do {
 						try {
 							line = reader.readLine();
+						
+
+						data=line.split("#");
+						createAchievement(db, new Rain(Double.parseDouble(data[0]),Double.parseDouble(data[1]),Double.parseDouble(data[2])));
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
 						//System.out.println(line);
 						// do something with the line 
-
-						data=line.split("#");
-						createAchievement(db, new Rain(Double.parseDouble(data[0]),Double.parseDouble(data[1]),Double.parseDouble(data[2])));
-
 					} while (line != null);
 					
 					context.runOnUiThread(new Runnable() {@Override public void run()
@@ -81,6 +81,7 @@ public class DbOpenHelper extends SQLiteOpenHelper{
 						context.toast("Done loading rain data.");
 					}});
 				}
+					
 			}.start();
 
 
