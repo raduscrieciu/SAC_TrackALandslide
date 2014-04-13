@@ -43,13 +43,21 @@ public class Utils {
 			rainfallRisk=RESULT_HIGH;
 		}
 		
-		return (rainfallRisk+deviationRisk)/2;
+		if(earthquakeIndex<1){
+			earthquakeRisk=RESULT_LOW;
+		}else if(earthquakeIndex>=1 && earthquakeIndex<5){
+			earthquakeRisk=RESULT_MEDIUM;
+		}else if(earthquakeIndex>=5){
+			earthquakeRisk=RESULT_HIGH;
+		}
+		
+		return (rainfallRisk+deviationRisk+earthquakeRisk)/3;
 	}
 	
 	public void showResult(){
 		
 		double resultCode=computeResult();
-		System.out.println(rainfallRisk+"---"+deviationRisk+"---"+resultCode);
+		System.out.println(rainfallRisk+"---"+deviationRisk+"---"+earthquakeRisk+"---"+resultCode);
 		
 		
 		RelativeLayout resultLayout=(RelativeLayout) context.findViewById(R.id.resultLayout);

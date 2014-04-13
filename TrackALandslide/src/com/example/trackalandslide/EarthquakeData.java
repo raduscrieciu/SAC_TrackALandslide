@@ -42,17 +42,10 @@ public class EarthquakeData extends DefaultHandler{
 	
 	public EarthquakeData(Context context, double longitude, double latitude){
 		this.context=(MainActivity)context;
-	}
-
-	public String getEarhQuakeData(double longitude, double latitude){
-//		this.longitude=longitude;
-//		this.latitude=latitude;
-
-		this.latitude=-114.3358;
-		this.longitude=44.5874;
 		
 		
-		return "";
+		this.longitude=longitude;
+		this.latitude=latitude;
 	}
 
 	public void connectToServer(){
@@ -84,23 +77,29 @@ public class EarthquakeData extends DefaultHandler{
 		double phi=0, phi2=0, theta=0, theta2=0;
 		double distance=0;
 		
-		phi=(90-this.latitude)*Math.PI/180;
-		theta=(this.longitude+180)*Math.PI/180;
+		phi=((90-this.latitude)*Math.PI)/180.00;
+		theta=((this.longitude+180)*Math.PI)/180.00;
+		
+		double temp=0;
+		
+		System.out.println("xxxxxxxxxxxxx"+earthquakeList.get(0).getLongitude()+"  "+this.longitude);
+		System.out.println("long: "+this.longitude+"  lat: "+this.latitude);
 		
 		
 		for(int i=0; i<earthquakeList.size(); i++){
+			
+			
 			latitude = earthquakeList.get(i).getLatitude();
 			longitude = earthquakeList.get(i).getLongitude();
 					
-			phi2=(90-latitude)*Math.PI/180;
-			theta2=(longitude+180)*Math.PI/180;
+			phi2=((90-latitude)*Math.PI)/180.00;
+			theta2=((longitude+180)*Math.PI)/180.00;
 			
-			distance=Math.acos(Math.cos(theta-theta2)*Math.sin(phi)*Math.sin(phi2)-(Math.cos(phi)*Math.cos(phi2)))*6371;
+			temp=Math.cos(theta-theta2)*Math.sin(phi)*Math.sin(phi2)+(Math.cos(phi)*Math.cos(phi2));
+
+			distance=Math.acos(temp)*6371;
 			
-			System.out.println(result+">>>>>>>"+(distance));
-			System.out.println(result+">>>>>>>"+(distance/(earthquakeList.get(i).getMagnitude())));
-			result+=earthquakeList.get(i).getMagnitude()*Math.exp(distance/(earthquakeList.get(i).getMagnitude())*(-5000.00));
-			System.out.println(result+"<<<<<<<<<<");
+			result+=Math.exp(distance/(-100.00))*(earthquakeList.get(i).getMagnitude());
 		}
 		
 		
@@ -236,18 +235,18 @@ public class EarthquakeData extends DefaultHandler{
 			earthquakeList.add(earthquake);
 			
 		}
-		else if (elementName.equals("longitude"))
+		else if (elementName.equals("value"))
 		{
 			theCurrentElement = ProcessingElements.NONE;
 		}
-		else if (elementName.equals("latitude"))
-		{
-			theCurrentElement = ProcessingElements.NONE;
-		}
-		else if (elementName.equals("mag"))
-		{
-			theCurrentElement = ProcessingElements.NONE;
-		}
+//		else if (elementName.equals("latitude"))
+//		{
+//			theCurrentElement = ProcessingElements.NONE;
+//		}
+//		else if (elementName.equals("mag"))
+//		{
+//			theCurrentElement = ProcessingElements.NONE;
+//		}
 	}
 	
 	
@@ -263,7 +262,9 @@ public class EarthquakeData extends DefaultHandler{
 		context.runOnUiThread(new Runnable() {@Override public void run()
 		{
 			//displayLoadingScreen(true);
-			context.resultEarthquakeText.setText("Earthquake: "+parseData(earthquakeList));
+			Utils.earthquakeIndex=parseData(earthquakeList);
+			context.resultEarthquakeText.setText("Earthquake: "+Utils.earthquakeIndex);
+			
 		}});
 	}
 
