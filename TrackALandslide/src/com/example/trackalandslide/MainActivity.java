@@ -1,20 +1,8 @@
 package com.example.trackalandslide;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
-import java.net.SocketTimeoutException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
@@ -27,10 +15,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -46,15 +34,15 @@ public class MainActivity extends ActionBarActivity implements OnClickListener{
 	private EditText longText, latText;
 	private SeekBar seekBar;
 	private TextView distanceText;
-	public TextView progressText, resultText;
+	public TextView progressText, resultRainText, resultDeviationText;
 	private LinearLayout loadingDataLayout;
 
 	private int seekBarValue; 
 	private DbOpenHelper helper;
-	
+
 	private final static double initLat=33.6907;
 	private final static double initLong=-84.1503;
-	
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -67,14 +55,16 @@ public class MainActivity extends ActionBarActivity implements OnClickListener{
 		ImageButton myLocation=(ImageButton) findViewById(R.id.myLocationButton);
 		myLocation.setOnClickListener(this);
 		seekBar=(SeekBar) findViewById(R.id.seekBar1);
-		Button doStuff=(Button) findViewById(R.id.doSomethingButton);
+		seekBar.setProgress(seekBar.getMax()/2);
+		ImageButton doStuff=(ImageButton) findViewById(R.id.doSomethingButton);
 		doStuff.setOnClickListener(this);
 		distanceText=(TextView) findViewById(R.id.distanceTextView);
 		progressText=(TextView) findViewById(R.id.progressText);
-		resultText=(TextView) findViewById(R.id.resultText);
+		resultRainText=(TextView) findViewById(R.id.rainfallResultText);
+		resultDeviationText=(TextView) findViewById(R.id.standardDeviationResultText);
 
 		loadingDataLayout=(LinearLayout) findViewById(R.id.loadingDataLayout);
-		
+
 		distanceText.setText("Range: "+String.valueOf((double)(seekBar.getProgress()/10))+" km"); 
 		seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){ 
 
@@ -101,10 +91,10 @@ public class MainActivity extends ActionBarActivity implements OnClickListener{
 			getSupportFragmentManager().beginTransaction()
 			.add(R.id.container, new PlaceholderFragment()).commit();
 		}
-		
+
 		helper = new DbOpenHelper(this); 
-	
-		
+
+
 	}
 
 	@Override
@@ -144,6 +134,8 @@ public class MainActivity extends ActionBarActivity implements OnClickListener{
 		}
 	}
 
+
+
 	@Override
 	public void onClick(View v) {
 		switch (v.getId()){
@@ -170,43 +162,45 @@ public class MainActivity extends ActionBarActivity implements OnClickListener{
 			if(longText.getText().toString().equals("") || latText.getText().toString().equals("")){
 				toast("Please provide a valid set of coordinates.");
 			}else{
-			
-			seekBarValue=seekBar.getProgress();
+				
+				RelativeLayout resultLayout=(RelativeLayout) findViewById(R.id.resultLayout);
+				resultLayout.setVisibility(View.GONE);
+				resultRainText.setText("");
+				resultDeviationText.setText("");
+				
+				seekBarValue=seekBar.getProgress();
 
-			new Thread() {
-				@Override
-				public void run() {
-					if(isNetworkAvailable()){
-						Eleveation elv=new Eleveation(MainActivity.this);
-						runOnUiThread(new Runnable() {@Override public void run()
-						{
-							displayLoadingScreen(true);
-							progressText.setText("Parsing elevation data...");
-						}});
+				new Thread() {
+					@Override
+					public void run() {
+						if(isNetworkAvailable()){
+							Eleveation elv=new Eleveation(MainActivity.this);
+							runOnUiThread(new Runnable() {@Override public void run()
+							{
+								displayLoadingScreen(true);
+								progressText.setText("Parsing elevation data...");
+							}});
 
-						System.out.println("xxxxxxxxxxxx"+Double.parseDouble(longText.getText().toString())+"  "+ 
-								Double.parseDouble(latText.getText().toString()));
-						
-						elv.getStandardDeviation(Double.parseDouble(longText.getText().toString()), 
-								Double.parseDouble(latText.getText().toString()), seekBarValue/10);
+							System.out.println("xxxxxxxxxxxx"+Double.parseDouble(longText.getText().toString())+"  "+ 
+									Double.parseDouble(latText.getText().toString()));
+
+							elv.getStandardDeviation(Double.parseDouble(longText.getText().toString()), 
+									Double.parseDouble(latText.getText().toString()), seekBarValue/10);
+						}
+						else{
+							Log.i(getClass().getName(), "Network error, unable to connect.");
+						}
 					}
-					else{
-						Log.i(getClass().getName(), "Network error, unable to connect.");
-					}
-				}
-			}.start();
+				}.start();
+	
+			}
+			//Rainfall
+			RainFall rainFall=new RainFall(this);
+			resultRainText.setText(rainFall.getRainfallData(Double.parseDouble(longText.getText().toString()), 
+					Double.parseDouble(latText.getText().toString())));
 
-			List<Rain> rainList=new ArrayList<Rain>();
-			rainList=helper.getAchievements(initLong,initLat); 
-		
-			System.out.println(rainList.size());
 			
-			for(int i=0; i<rainList.size(); i++){
-				System.out.println(rainList.get(i).getLatitude()+" "+rainList.get(i).getLongitude()+" "+rainList.get(i).getRainIndex());
-				resultText.append("Rainfall Index: "+rainList.get(0).getRainIndex());
-			}
-			}
-
+			
 			break;
 		}
 	}
@@ -273,77 +267,6 @@ public class MainActivity extends ActionBarActivity implements OnClickListener{
 						Toast.LENGTH_SHORT).show();
 			}
 
-		}
-	}
-
-	class RetrieveUrlInfo extends AsyncTask<String, Void, String[]> {
-
-		protected String[] doInBackground(String... urls) {
-			final String result[]=new String [2];
-			String latitude="", longitude="", range="";
-
-			try{
-				HttpURLConnection connection = null;
-				// Build Connection.
-				try{
-					URL url = new URL(urls[0]);
-					latitude=urls[1];
-					longitude=urls[2];
-					range=urls[3];
-					connection = (HttpURLConnection) url.openConnection();
-					connection.setReadTimeout(5000); // 5 seconds
-					connection.setConnectTimeout(5000); // 5 seconds
-				} catch (MalformedURLException e) {
-					// Impossible: The only URL used in the app is taken from string resources.
-					e.printStackTrace();
-				} catch (ProtocolException e) {
-					// Impossible: "GET" is a perfectly valid request method.
-					e.printStackTrace();
-				}
-				catch (Exception e){
-					e.printStackTrace();
-				}
-				int responseCode = connection.getResponseCode();
-				if(responseCode != 200){
-					Log.w(getClass().getName(), "Website request failed. Response Code: " + responseCode);
-					connection.disconnect();
-					return null;
-				}
-
-				// Read data from response.
-				StringBuilder builder = new StringBuilder();
-				BufferedReader responseReader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-				String line = responseReader.readLine();
-				while (line != null){
-					builder.append(line);
-					line = responseReader.readLine();
-				}
-				String responseString = builder.toString();
-
-				//TODO
-
-				result[0]=responseString+"\n"+latitude+"\n"+longitude+"\n"+range;
-				//	System.out.println(result[0]);
-
-				connection.disconnect();
-				return result;
-
-			} catch (SocketTimeoutException e) {
-				Log.w(getClass().getName(), "Connection timed out. Returning null");
-				return null;
-			} catch(IOException e){
-				Log.d(getClass().getName(), "IOException when connecting to server.");
-				e.printStackTrace();
-				return null;
-			} catch (Exception e) {
-				e.printStackTrace();
-				return null;
-			}
-
-		}
-
-		protected void onPostExecute(String feed) {
-			//nothing to do here for now
 		}
 	}
 

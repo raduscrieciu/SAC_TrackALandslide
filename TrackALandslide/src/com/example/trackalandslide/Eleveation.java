@@ -22,7 +22,7 @@ public class Eleveation {
 	int range;
 
 	private MainActivity context;
-	
+
 	public Eleveation(Context context){
 		this.context=(MainActivity) context;
 	}
@@ -43,67 +43,67 @@ public class Eleveation {
 	}
 
 	public double getStandardDeviation(double longitude, double latitude, int range){
-	//	double height=getElevation(longitude, latitude);
+		//	double height=getElevation(longitude, latitude);
 		double result=0;
-		
+
 		System.out.println("aaaaaaaaaaaaaaaa"+longitude+"  "+latitude);
-		
+
 		double typicalDistance=range/3;
 		double theta=0;
 		double phi=0;
-		
+
 		double thetaInternal=0, thetaNew=0;
 		double phiInternal=0, phiNew=0;
-		
+
 		double newLatitude, newLongitude;
-		
+
 		double x, y, z, x1, y1, x2, y2, z2, x3, y3, z3;
 		double r;
-		
+
 		double currentHeight=0, totalHeight=0, totalHeightSq=0;
-		
+
 		for(int i=0; i<5; i++){
 			result=-typicalDistance*Math.log(1-Math.random());
 			theta=result/(2*Math.PI*6371);
 			phi=Math.random()*2*Math.PI;
-			
-			
+
+
 			thetaInternal=((90-latitude)*Math.PI)/180;
 			phiInternal=((180+longitude)*Math.PI)/180;
-		
+
 			x=Math.sin(thetaInternal)*Math.cos(phiInternal);
 			y=Math.sin(thetaInternal)*Math.sin(phiInternal);
 			z=Math.cos(thetaInternal);
-			
+
 			x1=y;
 			y1=x;
-			
+
 			x2=z*x;
 			y2=z*y;
 			z2=(x*x+y*y)*(-1);
-			
+
 			x3=x*Math.cos(theta)+Math.sin(theta)*(Math.sin(phi)*x1+Math.cos(phi)*x2);
 			y3=y*Math.cos(theta)+Math.sin(theta)*(Math.sin(phi)*y1+Math.cos(phi)*y2);
 			z3=z*Math.cos(theta)+z2*Math.cos(phi)*Math.sin(theta);
-			
+
 			r=Math.sqrt(x3*x3+y3*y3+z3*z3);
 			thetaNew=Math.acos(z3/r);
 			phiNew=Math.atan(y3/x3);
-			
+
 			newLatitude=90-(180*thetaNew/Math.PI);
-			
-			
+
+
 			newLongitude=(180*phiNew/Math.PI)-180;
-			
+
 			if(newLongitude <=-180){
 				newLongitude+=180;
 			}
-			
-			
-			
+
+
+
 			System.out.println("==================\n"+newLatitude+"   ;   "+newLongitude);
-			
-			
+
+
 			System.out.println(getElevation(newLongitude, newLatitude)+"  **********");
 			currentHeight=getElevation(newLongitude, newLatitude);
 			totalHeight+=currentHeight;
@@ -115,7 +115,15 @@ public class Eleveation {
 		context.runOnUiThread(new Runnable() {@Override public void run()
 		{
 			context.displayLoadingScreen(false);
-			context.resultText.append("\nStandard Deviation: "+res);
+			context.resultDeviationText.setText("Standard Deviation: "+res);
+			System.out.println("!!!!!!!!!!thing is finished!!!!!!!1111");
+			Utils.deviationFinished=true;
+
+			if(Utils.rainFinished && Utils.deviationFinished){
+				final Utils u=new Utils(context);
+				u.showResult(Utils.RESULT_HIGH);
+
+			}
 		}});
 		return result;
 	}
@@ -171,6 +179,7 @@ public class Eleveation {
 				}
 
 				connection.disconnect();
+
 				return result;
 
 			} catch (SocketTimeoutException e) {
